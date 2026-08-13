@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="description" content="A private, offline-first personal expense tracker. Your financial data stays on this device." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Expenses" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/png" href="./assets/icons/favicon.png" />
+  <link rel="apple-touch-icon" href="./assets/icons/icon-192.png" />
+  <title>Expense Tracker</title>
+  <link rel="stylesheet" href="./css/style.css?v=2" />
+</head>
+<body data-theme="light">
+  <!-- Lock screen -->
+  <div id="lock-screen" class="lock-screen" hidden>
+    <div class="lock-box">
+      <div class="lock-logo">₹</div>
+      <h2 class="lock-title">Expense Tracker</h2>
+      <p class="lock-subtitle">Enter your PIN</p>
+      <div id="lock-dots" class="lock-dots"></div>
+      <div id="lock-numpad" class="lock-numpad">
+        <button type="button" class="lock-key" data-key="1">1</button>
+        <button type="button" class="lock-key" data-key="2">2</button>
+        <button type="button" class="lock-key" data-key="3">3</button>
+        <button type="button" class="lock-key" data-key="4">4</button>
+        <button type="button" class="lock-key" data-key="5">5</button>
+        <button type="button" class="lock-key" data-key="6">6</button>
+        <button type="button" class="lock-key" data-key="7">7</button>
+        <button type="button" class="lock-key" data-key="8">8</button>
+        <button type="button" class="lock-key" data-key="9">9</button>
+        <button type="button" class="lock-key lock-key-blank" aria-label="empty"></button>
+        <button type="button" class="lock-key" data-key="0">0</button>
+        <button type="button" class="lock-key lock-key-back" data-key="back" aria-label="Delete">⌫</button>
+      </div>
+      <p id="lock-error" class="lock-error" role="alert" aria-live="assertive"></p>
+      <button type="button" id="lock-reset" class="lock-reset">Forgot PIN?</button>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- App shell -->
+  <div class="app-shell">
+    <!-- Desktop sidebar -->
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="sidebar-brand">
+        <span class="brand-logo">₹</span>
+        <span class="brand-name">Expense&nbsp;Tracker</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button type="button" class="side-link" data-view="dashboard" data-label="Dashboard">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button type="button" class="side-link" data-view="transactions" data-label="Transactions">
+          <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          <span>Transactions</span>
+        </button>
+        <button type="button" class="side-link" data-view="analytics" data-label="Analytics">
+          <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>Analytics</span>
+        </button>
+        <button type="button" class="side-link" data-view="settings" data-label="Settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button type="button" id="side-add-btn" class="btn btn-primary btn-block">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Add Transaction
+        </button>
+        <p class="sidebar-privacy">All data stays on this device</p>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <header class="topbar">
+        <button type="button" id="topbar-menu" class="icon-btn topbar-menu" aria-label="Open menu">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <h1 id="topbar-title" class="topbar-title">Dashboard</h1>
+        <span class="topbar-spacer"></span>
+      </header>
+
+      <div class="views" id="views">
+        <section id="view-dashboard" class="view active" aria-label="Dashboard"></section>
+        <section id="view-transactions" class="view" aria-label="Transactions"></section>
+        <section id="view-analytics" class="view" aria-label="Analytics"></section>
+        <section id="view-settings" class="view" aria-label="Settings"></section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile bottom navigation -->
+  <nav class="bottom-nav" aria-label="Primary">
+    <button type="button" class="bnav-item" data-view="dashboard" data-label="Home" aria-label="Home">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+      <span>Home</span>
+    </button>
+    <button type="button" class="bnav-item" data-view="transactions" data-label="Transactions" aria-label="Transactions">
+      <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      <span>Transactions</span>
+    </button>
+    <button type="button" id="bnav-add" class="bnav-add" aria-label="Add expense or income">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <button type="button" class="bnav-item" data-view="analytics" data-label="Analytics" aria-label="Analytics">
+      <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+      <span>Analytics</span>
+    </button>
+    <button type="button" class="bnav-item" data-view="settings" data-label="Settings" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+  <!-- Mobile drawer menu -->
+  <div id="drawer" class="drawer" hidden>
+    <div class="drawer-backdrop" data-close-drawer></div>
+    <div class="drawer-panel">
+      <button type="button" class="icon-btn" data-close-drawer aria-label="Close menu">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <h2 class="drawer-title">Expense Tracker</h2>
+      <p class="drawer-subtitle">Private · Offline · On your device</p>
+      <nav class="drawer-nav">
+        <button type="button" class="side-link" data-view="dashboard" data-label="Dashboard">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
+          <span>Dashboard</span>
+        </button>
+        <button type="button" class="side-link" data-view="transactions" data-label="Transactions">
+          <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          <span>Transactions</span>
+        </button>
+        <button type="button" class="side-link" data-view="analytics" data-label="Analytics">
+          <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>Analytics</span>
+        </button>
+        <button type="button" class="side-link" data-view="settings" data-label="Settings">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </button>
+      </nav>
+      <p class="drawer-foot">Your financial data is stored locally on this device.</p>
+    </div>
+  </div>
+
+  <!-- Modal root -->
+  <div id="modal-root"></div>
+
+  <script src="./js/utils.js?v=2"></script>
+  <script src="./js/database.js?v=2"></script>
+  <script src="./js/charts.js?v=2"></script>
+  <script src="./js/backup.js?v=2"></script>
+  <script src="./js/dashboard.js?v=2"></script>
+  <script src="./js/transactions.js?v=2"></script>
+  <script src="./js/analytics.js?v=2"></script>
+  <script src="./js/recurring.js?v=2"></script>
+  <script src="./js/settings.js?v=2"></script>
+  <script src="./js/app.js?v=2"></script>
+  <script>
+    // Start the app once all modules are loaded.
+    window.addEventListener("DOMContentLoaded", function () {
+      if (window.App && window.App.boot) window.App.boot().catch(function (err) {
+        console.error("App failed to start:", err);
+      });
+    });
+  </script>
+  <script>
+    // Guaranteed keypad wiring (independent of module loading order / caches).
+    // App.lock is attached to window.App by app.js; the keypad only needs a
+    // direct listener, so attach it as soon as the lock API is available.
+    (function () {
+      function wire() {
+        if (!window.App || !window.App.lock) { setTimeout(wire, 100); return; }
+        var numpad = document.getElementById("lock-numpad");
+        if (!numpad || numpad.dataset.wired) return;
+        numpad.dataset.wired = "1";
+        numpad.addEventListener("click", function (e) {
+          var key = e.target.closest ? e.target.closest(".lock-key") : null;
+          if (key) window.App.lock.handleKey(key.getAttribute("data-key"));
+        });
+        var reset = document.getElementById("lock-reset");
+        if (reset) {
+          reset.addEventListener("click", async function () {
+            var ok = await window.App.utils.confirm({
+              title: "Reset app lock?",
+              message: "The PIN will be removed. Your data stays safe on this device; you can set a new PIN later in Settings.",
+              confirmText: "Remove PIN",
+              danger: false,
+              icon: "info"
+            });
+            if (!ok) return;
+            try {
+              await window.App.lock.disable();
+              window.App.lock.hide();
+              document.getElementById("lock-screen").hidden = true;
+            } catch (err) { console.error("Reset lock failed:", err); }
+          });
+        }
+      }
+      wire();
+    })();
+  </script>
+</body>
+</html>
