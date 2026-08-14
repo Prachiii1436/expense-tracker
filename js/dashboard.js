@@ -189,7 +189,7 @@ window.App = window.App || {};
         <div class="tx-body">
           <div class="tx-cat">${U.escapeHtml(t.category)}</div>
           ${t.description ? `<div class="tx-desc">${U.escapeHtml(t.description)}</div>` : ""}
-          <div class="tx-meta">${U.formatDate(t.date)}${t.time ? " · " + t.time : ""}</div>
+          <div class="tx-meta">${U.formatDate(t.date)}${t.bank ? " · " + U.escapeHtml(t.bank) : ""}${t.time ? " · " + t.time : ""}</div>
         </div>
         <div class="tx-amount ${amountCol}">${sign}${U.fmtMoney(t.amount)}</div>
       </div>`;
