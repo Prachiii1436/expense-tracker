@@ -123,7 +123,7 @@ window.App = window.App || {};
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
 
-    const headers = ["ID", "Type", "Amount", "Category", "Description", "Date", "Time", "Payment Method", "Created At"];
+    const headers = ["ID", "Type", "Amount", "Category", "Description", "Date", "Time", "Bank", "Payment Method", "Created At"];
     const rows = sort.map((t) =>
       [
         t.id,
@@ -133,6 +133,7 @@ window.App = window.App || {};
         t.description || "",
         t.date,
         t.time || "",
+        t.bank || "",
         t.paymentMethod || "",
         t.createdAt || ""
       ]
