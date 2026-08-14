@@ -13,6 +13,8 @@ window.App = window.App || {};
   const state = ns.state;
   const cache = ns.cache;
 
+  const BANKS = ["Maharashtra", "HDFC"];
+
   const filterState = {
     type: "all", // all | expense | income
     search: "",
@@ -20,6 +22,7 @@ window.App = window.App || {};
     to: "",
     category: "",
     payment: "",
+    bank: "",
     sort: "newest" // newest | oldest | amount-desc | amount-asc
   };
 
@@ -63,22 +66,24 @@ window.App = window.App || {};
         ${pickerHTML(categories, tx ? tx.category : "")}
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="ed-date">Date</label>
-          <input type="date" id="ed-date" class="form-input" value="${tx ? tx.date : U.todayStr()}" />
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="ed-time">Time</label>
-          <input type="time" id="ed-time" class="form-input" value="${tx ? tx.time || "00:00" : U.nowTime()}" />
-        </div>
+      <div class="form-group">
+        <label class="form-label" for="ed-date">Date</label>
+        <input type="date" id="ed-date" class="form-input" value="${tx ? tx.date : U.todayStr()}" />
       </div>
 
-      <div class="form-group">
-        <label class="form-label" for="ed-payment">Payment Method</label>
-        <select id="ed-payment" class="form-select">
-          ${payments.map((p) => `<option value="${U.escapeHtml(p.name)}" ${tx && tx.paymentMethod === p.name ? "selected" : ""}>${p.icon} ${U.escapeHtml(p.name)}</option>`).join("")}
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="ed-bank">Bank</label>
+          <select id="ed-bank" class="form-select">
+            ${BANKS.map((b) => `<option value="${U.escapeHtml(b)}" ${tx && tx.bank === b ? "selected" : ""}>${U.escapeHtml(b)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ed-payment">Payment Method</label>
+          <select id="ed-payment" class="form-select">
+            ${payments.map((p) => `<option value="${U.escapeHtml(p.name)}" ${tx && tx.paymentMethod === p.name ? "selected" : ""}>${p.icon} ${U.escapeHtml(p.name)}</option>`).join("")}
+          </select>
+        </div>
       </div>
 
       <div class="form-group">
@@ -145,7 +150,7 @@ window.App = window.App || {};
       }
       const category = pick.dataset.pick;
       const date = document.getElementById("ed-date").value;
-      const time = document.getElementById("ed-time").value;
+      const bank = document.getElementById("ed-bank").value;
       const paymentMethod = document.getElementById("ed-payment").value;
       const description = document.getElementById("ed-desc").value.trim();
 
@@ -164,7 +169,8 @@ window.App = window.App || {};
       record.amount = amount;
       record.category = category;
       record.date = date;
-      record.time = time || "";
+      record.time = record.time || "";
+      record.bank = bank;
       record.paymentMethod = paymentMethod;
       record.description = description;
       record.month = String(date).slice(0, 7);
@@ -220,7 +226,7 @@ window.App = window.App || {};
           <div class="detail-cell"><div class="dl">Type</div><div class="dv">${t.type === "income" ? "Income" : "Expense"}</div></div>
           <div class="detail-cell"><div class="dl">${catLabel}</div><div class="dv">${icon} ${U.escapeHtml(t.category)}</div></div>
           <div class="detail-cell"><div class="dl">Date</div><div class="dv">${U.formatDate(t.date)}</div></div>
-          <div class="detail-cell"><div class="dl">Time</div><div class="dv">${t.time || "—"}</div></div>
+          <div class="detail-cell"><div class="dl">Bank</div><div class="dv">${U.escapeHtml(t.bank || "—")}</div></div>
           <div class="detail-cell"><div class="dl">Payment</div><div class="dv">${U.escapeHtml(t.paymentMethod || "—")}</div></div>
           <div class="detail-cell"><div class="dl">Amount</div><div class="dv">${sign}${U.fmtMoney(t.amount)}</div></div>
           <div class="detail-cell full"><div class="dl">Note</div><div class="dv">${t.description ? U.escapeHtml(t.description) : "—"}</div></div>
@@ -264,12 +270,13 @@ window.App = window.App || {};
     if (filterState.type !== "all") list = list.filter((t) => t.type === filterState.type);
     if (filterState.category) list = list.filter((t) => t.category === filterState.category);
     if (filterState.payment) list = list.filter((t) => t.paymentMethod === filterState.payment);
+    if (filterState.bank) list = list.filter((t) => t.bank === filterState.bank);
     if (filterState.from) list = list.filter((t) => t.date >= filterState.from);
     if (filterState.to) list = list.filter((t) => t.date <= filterState.to);
     if (filterState.search) {
       const q = filterState.search.toLowerCase();
       list = list.filter((t) =>
-        `${t.description || ""} ${t.category} ${t.paymentMethod || ""} ${t.amount}`.toLowerCase().includes(q)
+        `${t.description || ""} ${t.category} ${t.paymentMethod || ""} ${t.bank || ""} ${t.amount}`.toLowerCase().includes(q)
       );
     }
     if (filterState.sort === "oldest") list = list.slice().reverse();
@@ -282,7 +289,7 @@ window.App = window.App || {};
     const view = document.getElementById("view-transactions");
     const list = applyFilters();
     const hasAny = state.transactions.length > 0;
-    const activeFilters = filterState.category || filterState.payment || filterState.from || filterState.to || filterState.search;
+    const activeFilters = filterState.category || filterState.payment || filterState.bank || filterState.from || filterState.to || filterState.search;
 
     view.innerHTML = `
       <div class="toolbar">
@@ -332,6 +339,7 @@ window.App = window.App || {};
     let chips = "";
     if (filterState.category) chips += chipHTML(filterState.category, "cat");
     if (filterState.payment) chips += chipHTML(filterState.payment, "pay");
+    if (filterState.bank) chips += chipHTML(filterState.bank, "bank");
     if (filterState.from || filterState.to) chips += chipHTML(`${filterState.from || "…"} → ${filterState.to || "…"}`, "date");
     if (filterState.search) chips += chipHTML(`"${filterState.search}"`, "src");
     return `<div class="chip-row">${chips}<button type="button" class="btn-outline" style="font-size:.8rem;padding:8px 14px;border-radius:999px;border:1px solid var(--border);color:var(--text-2)" id="reset-all-filters">Reset</button></div>`;
@@ -365,7 +373,7 @@ window.App = window.App || {};
     const amountCol = t.type === "income" ? "income" : "expense";
     const sign = t.type === "income" ? "+" : "-";
     const isDesktop = window.innerWidth >= 1024;
-    const timeHtml = isDesktop ? `<div class="tx-meta d-cell-time">${t.time || "—"}</div>` : "";
+    const bankHtml = isDesktop ? `<div class="tx-meta d-cell-bank">${U.escapeHtml(t.bank || "—")}</div>` : "";
     const dateHtml = isDesktop ? `<div class="tx-meta d-cell-date">${U.formatDate(t.date)}</div>` : "";
     const payHtml = isDesktop ? `<div class="tx-meta d-cell-pay">${U.escapeHtml(t.paymentMethod || "—")}</div>` : "";
     return `
@@ -374,9 +382,10 @@ window.App = window.App || {};
         <div class="tx-body">
           <div class="tx-cat">${U.escapeHtml(t.category)}</div>
           ${t.description ? `<div class="tx-desc">${U.escapeHtml(t.description)}</div>` : ""}
-          <div class="tx-meta">${U.formatDate(t.date)}${t.time ? " · " + t.time : ""}</div>
+          <div class="tx-meta">${U.formatDate(t.date)}${t.bank ? " · " + U.escapeHtml(t.bank) : ""}${t.time ? " · " + t.time : ""}</div>
         </div>
         ${dateHtml}
+        ${bankHtml}
         ${payHtml}
         <div class="tx-amount ${amountCol}">${sign}${U.fmtMoney(t.amount)}</div>
       </div>`;
@@ -418,13 +427,14 @@ window.App = window.App || {};
       const key = el.dataset.filterChip;
       if (key === "cat") filterState.category = "";
       else if (key === "pay") filterState.payment = "";
+      else if (key === "bank") filterState.bank = "";
       else if (key === "date") { filterState.from = ""; filterState.to = ""; }
       else if (key === "src") filterState.search = "";
       render();
     });
 
     U.delegate("click", "#reset-all-filters, #clear-filters", () => {
-      Object.assign(filterState, { search: "", from: "", to: "", category: "", payment: "" });
+      Object.assign(filterState, { search: "", from: "", to: "", category: "", payment: "", bank: "" });
       render();
     });
 
@@ -461,6 +471,13 @@ window.App = window.App || {};
         </select>
       </div>
       <div class="form-group">
+        <label class="form-label">Bank</label>
+        <select id="f-bank" class="form-select">
+          <option value="">All banks</option>
+          ${BANKS.map((b) => `<option value="${U.escapeHtml(b)}">${U.escapeHtml(b)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group">
         <label class="form-label">Sort by</label>
         <select id="f-sort" class="form-select">
           <option value="newest" ${filterState.sort === "newest" ? "selected" : ""}>Newest first</option>
@@ -477,12 +494,14 @@ window.App = window.App || {};
 
     document.getElementById("f-category").value = filterState.category;
     document.getElementById("f-payment").value = filterState.payment;
+    document.getElementById("f-bank").value = filterState.bank;
 
     document.getElementById("f-apply").addEventListener("click", () => {
       filterState.from = document.getElementById("f-from").value;
       filterState.to = document.getElementById("f-to").value;
       filterState.category = document.getElementById("f-category").value;
       filterState.payment = document.getElementById("f-payment").value;
+      filterState.bank = document.getElementById("f-bank").value;
       filterState.sort = document.getElementById("f-sort").value;
       U.closeModal();
       render();
